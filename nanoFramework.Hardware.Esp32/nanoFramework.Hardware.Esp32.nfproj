@@ -48,6 +48,10 @@
   </ItemGroup>
   <Import Project="$(NanoFrameworkProjectSystemPath)NFProjectSystem.props" Condition="Exists('$(NanoFrameworkProjectSystemPath)NFProjectSystem.props')" />
   <ItemGroup>
+    <Compile Include="CapacitiveTouch\TouchFsmMode.cs" />
+    <Compile Include="CapacitiveTouch\TouchHighVolt.cs" />
+    <Compile Include="CapacitiveTouch\TouchLowVolt.cs" />
+    <Compile Include="CapacitiveTouch\TouchVoltAtten.cs" />
     <Compile Include="GpioPins.cs" />
     <Compile Include="HighResEventListener.cs" />
     <Compile Include="HighResTimer.cs" />

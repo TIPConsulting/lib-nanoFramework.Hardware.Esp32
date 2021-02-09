@@ -48,10 +48,19 @@
   </ItemGroup>
   <Import Project="$(NanoFrameworkProjectSystemPath)NFProjectSystem.props" Condition="Exists('$(NanoFrameworkProjectSystemPath)NFProjectSystem.props')" />
   <ItemGroup>
-    <Compile Include="CapacitiveTouch\TouchFsmMode.cs" />
-    <Compile Include="CapacitiveTouch\TouchHighVolt.cs" />
-    <Compile Include="CapacitiveTouch\TouchLowVolt.cs" />
-    <Compile Include="CapacitiveTouch\TouchVoltAtten.cs" />
+    <Compile Include="CapacitiveTouch\Enums\TouchFsmMode.cs" />
+    <Compile Include="CapacitiveTouch\Enums\TouchHighVolt.cs" />
+    <Compile Include="CapacitiveTouch\Enums\TouchLowVolt.cs" />
+    <Compile Include="CapacitiveTouch\Enums\TouchPinSelectMode.cs" />
+    <Compile Include="CapacitiveTouch\TouchPad.cs" />
+    <Compile Include="CapacitiveTouch\TouchPadBase.cs" />
+    <Compile Include="CapacitiveTouch\Config\TouchPadConfig.cs" />
+    <Compile Include="CapacitiveTouch\Config\TouchPadConfigBase.cs" />
+    <Compile Include="CapacitiveTouch\Config\TouchPadReaderConfig.cs" />
+    <Compile Include="CapacitiveTouch\Enums\TouchPadReadMode.cs" />
+    <Compile Include="CapacitiveTouch\Enums\TouchVoltAtten.cs" />
+    <Compile Include="CapacitiveTouch\TouchPadReader.cs" />
+    <Compile Include="CapacitiveTouch\TouchPadValueChangedEventHandler.cs" />
     <Compile Include="GpioPins.cs" />
     <Compile Include="HighResEventListener.cs" />
     <Compile Include="HighResTimer.cs" />

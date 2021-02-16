@@ -44,6 +44,6 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// Select the method in which pins are indexed.
         /// Pins can be indexed by GPIO number or touch index
         /// </summary>
-        public TouchPinSelectMode PinSelectMode;
+        public TouchPinSelectMode PinSelectMode { get; set; } = TouchPinSelectMode.GpioIndex;
     }
 }

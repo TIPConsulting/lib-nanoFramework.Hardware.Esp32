@@ -15,6 +15,26 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
     public abstract class TouchPadBase : IDisposable
     {
         /// <summary>
+        /// Initialize the native touchpad featureset
+        /// </summary>
+        /// <param name="config"></param>
+        public static void Init(TouchPadConfigBase config)
+        {
+            if (!TouchPadInit())
+                throw new Exception();
+
+            if (!TouchPadFilterStart(config.TouchPadFilterTouchPeriod))
+                throw new Exception();
+
+            if (!TouchPadSetVoltage(config.TouchHighVolt, config.TouchLowVolt, config.TouchVoltAtten))
+                throw new Exception();
+
+            if (!TouchPadSetFsmMode(TouchFsmMode.Timer))
+                throw new Exception();
+        }
+
+
+        /// <summary>
         /// Map of GPIO to touch pad number.
         /// ESP32 offers up to 10 capacitive IOs that detect changes in capacitance on touch sensors due to finger contact or proximity.
         /// Index is the Touch pin number, value is the raw GPIO pin number
@@ -71,18 +91,8 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
 
-            if (!TouchPadInit())
-                throw new Exception();
-
-            SetFsmMode();
-
-            if (!TouchPadSetVoltage(config.TouchHighVolt, config.TouchLowVolt, config.TouchVoltAtten))
-                throw new Exception();
 
             if (!TouchPadConfig(_touchPadIndex, config.TouchThreshNoUse))
-                throw new Exception();
-
-            if (!TouchPadSetFilterPeriod(config.TouchPadFilterTouchPeriod))
                 throw new Exception();
         }
 
@@ -109,17 +119,6 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
                 GpioPinNumber = _gpioTouchPadArr[PinNumber];
                 TouchPadIndex = PinNumber;
             }
-        }
-
-        /// <summary>
-        /// Set touch sensor FSM mode, the test action can be triggered by the timer, as well as by the software.
-        /// The default FSM mode is <see cref="TouchFsmMode.Software"/>. If you want to use interrupt trigger mode, 
-        /// then set it to <see cref="TouchFsmMode.Timer"/> after calling init function.
-        /// </summary>
-        public void SetFsmMode()
-        {
-            if (!TouchPadSetFsmMode(TouchFsmMode.Timer))
-                throw new Exception();
         }
 
 
@@ -170,7 +169,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// </remarks>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern bool TouchPadInit();
+        private static extern bool TouchPadInit();
 
         /// <summary>
         /// Set touch sensor FSM mode, the test action can be triggered by the timer, as well as by the software.
@@ -182,7 +181,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="touchFsmMode">FSM mode</param>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected extern bool TouchPadSetFsmMode(TouchFsmMode touchFsmMode);
+        protected static extern bool TouchPadSetFsmMode(TouchFsmMode touchFsmMode);
 
         /// <summary>
         /// Set touch sensor high voltage threshold of chanrge. 
@@ -198,7 +197,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="touchVoltAtten">The attenuation on DREFH</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected extern bool TouchPadSetVoltage(TouchHighVolt touchHighVolt, TouchLowVolt touchLowVolt, TouchVoltAtten touchVoltAtten);
+        protected static extern bool TouchPadSetVoltage(TouchHighVolt touchHighVolt, TouchLowVolt touchLowVolt, TouchVoltAtten touchVoltAtten);
 
         /// <summary>
         /// Configure touch pad interrupt threshold.
@@ -211,7 +210,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="threshold">Interrupt threshold,</param>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected extern bool TouchPadConfig(int touchPadIndex, ushort threshold);
+        protected static extern bool TouchPadConfig(int touchPadIndex, ushort threshold);
 
         /// <summary>
         /// Set touch pad filter calibration period, in ms. Need to call touch_pad_filter_start before all touch filter APIs
@@ -223,7 +222,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="newPeriodMs">Filter period, in ms</param>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected extern bool TouchPadSetFilterPeriod(uint newPeriodMs);
+        protected static extern bool TouchPadSetFilterPeriod(uint newPeriodMs);
 
         /// <summary>
         /// Get touch sensor counter value. 
@@ -238,7 +237,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="touchPadIndex">Touch pad index</param>
         /// <returns>Touch sensor value</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected extern ushort TouchPadRead(int touchPadIndex);
+        protected static extern ushort TouchPadRead(int touchPadIndex);
 
         /// <summary>
         /// Get filtered touch sensor counter value by IIR filter.
@@ -251,9 +250,10 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="touchPadIndex">Touch pad index</param>
         /// <returns>Touch sensor value</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected extern ushort TouchPadReadFiltered(int touchPadIndex);
+        protected static extern ushort TouchPadReadFiltered(int touchPadIndex);
 
         //[MethodImpl(MethodImplOptions.InternalCall)]
+        //TODO
         //protected extern ushort TouchPadSetReadRawData(int touchPadIndex); //esp_err_t touch_pad_read_raw_data(touch_pad_ttouch_num, uint16_t *touch_value)
 
         /// <summary>
@@ -267,7 +267,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="threshold">Threshold of touchpad count, refer to touch_pad_set_trigger_mode to see how to set trigger mode.</param>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected extern bool TouchPadSetThresh(int touchPadIndex, ushort threshold);
+        protected static extern bool TouchPadSetThresh(int touchPadIndex, ushort threshold);
 
         /// <summary>
         /// Start touch pad filter function This API will start a filter to process the noise in order to prevent false triggering when detecting slight change of capacitance. 
@@ -279,9 +279,8 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// </remarks>
         /// <param name="FilterPeriod">filter calibration period, in ms</param>
         /// <returns>True if successful</returns>
-        //TODO: ensure filter start is invoked at appropriate time
-        //[MethodImpl(MethodImplOptions.InternalCall)]
-        //protected extern bool TouchPadFilterStart(int FilterPeriod);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern bool TouchPadFilterStart(uint FilterPeriod);
 
         /// <summary>
         /// Register touch-pad ISR. The handler will be attached to the same CPU core that this function is running on.
@@ -294,7 +293,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <returns>True if successful</returns>
         //TODO
         //[MethodImpl(MethodImplOptions.InternalCall)]
-        //protected extern bool TouchPadIsrRegister(todo);
+        //protected static extern bool TouchPadIsrRegister(todo);
 
 
 
@@ -309,13 +308,13 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <returns></returns>
         //TODO
         //[MethodImpl(MethodImplOptions.InternalCall)]
-        //protected extern bool TouchPadIsrDeregister(todo);
+        //protected static extern bool TouchPadIsrDeregister(todo);
 
         /// <summary>
         /// Dispose
         /// </summary>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern void DisposeNative();
+        private static extern void DisposeNative();
         #endregion
 
     }

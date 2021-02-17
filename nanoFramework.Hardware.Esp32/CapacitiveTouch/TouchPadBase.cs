@@ -20,16 +20,16 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="config"></param>
         public static void Init(TouchPadConfigBase config)
         {
-            if (!TouchPadInit())
+            if (!NativeTouchPadInit())
                 throw new Exception();
 
-            if (!TouchPadFilterStart(config.TouchPadFilterTouchPeriod))
+            if (!NativeTouchPadFilterStart(config.TouchPadFilterTouchPeriod))
                 throw new Exception();
 
-            if (!TouchPadSetVoltage(config.TouchHighVolt, config.TouchLowVolt, config.TouchVoltAtten))
+            if (!NativeTouchPadSetVoltage(config.TouchHighVolt, config.TouchLowVolt, config.TouchVoltAtten))
                 throw new Exception();
 
-            if (!TouchPadSetFsmMode(TouchFsmMode.Timer))
+            if (!NativeTouchPadSetFsmMode(TouchFsmMode.Timer))
                 throw new Exception();
         }
 
@@ -92,7 +92,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
                 throw new ArgumentNullException(nameof(config));
 
 
-            if (!TouchPadConfig(_touchPadIndex, config.TouchThreshNoUse))
+            if (!NativeTouchPadConfig(_touchPadIndex, config.TouchThreshNoUse))
                 throw new Exception();
         }
 
@@ -132,7 +132,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
                     //noop
                 }
 
-                DisposeNative();
+                NativeDispose();
 
                 _isDisposed = true;
             }
@@ -169,7 +169,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// </remarks>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern bool TouchPadInit();
+        private static extern bool NativeTouchPadInit();
 
         /// <summary>
         /// Set touch sensor FSM mode, the test action can be triggered by the timer, as well as by the software.
@@ -181,7 +181,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="touchFsmMode">FSM mode</param>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected static extern bool TouchPadSetFsmMode(TouchFsmMode touchFsmMode);
+        protected static extern bool NativeTouchPadSetFsmMode(TouchFsmMode touchFsmMode);
 
         /// <summary>
         /// Set touch sensor high voltage threshold of chanrge. 
@@ -197,7 +197,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="touchVoltAtten">The attenuation on DREFH</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected static extern bool TouchPadSetVoltage(TouchHighVolt touchHighVolt, TouchLowVolt touchLowVolt, TouchVoltAtten touchVoltAtten);
+        protected static extern bool NativeTouchPadSetVoltage(TouchHighVolt touchHighVolt, TouchLowVolt touchLowVolt, TouchVoltAtten touchVoltAtten);
 
         /// <summary>
         /// Configure touch pad interrupt threshold.
@@ -210,7 +210,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="threshold">Interrupt threshold,</param>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected static extern bool TouchPadConfig(int touchPadIndex, ushort threshold);
+        protected static extern bool NativeTouchPadConfig(int touchPadIndex, ushort threshold);
 
         /// <summary>
         /// Set touch pad filter calibration period, in ms. Need to call touch_pad_filter_start before all touch filter APIs
@@ -222,7 +222,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="newPeriodMs">Filter period, in ms</param>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected static extern bool TouchPadSetFilterPeriod(uint newPeriodMs);
+        protected static extern bool NativeTouchPadSetFilterPeriod(uint newPeriodMs);
 
         /// <summary>
         /// Get touch sensor counter value. 
@@ -237,7 +237,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="touchPadIndex">Touch pad index</param>
         /// <returns>Touch sensor value</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected static extern ushort TouchPadRead(int touchPadIndex);
+        protected static extern ushort NativeTouchPadRead(int touchPadIndex);
 
         /// <summary>
         /// Get filtered touch sensor counter value by IIR filter.
@@ -250,7 +250,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="touchPadIndex">Touch pad index</param>
         /// <returns>Touch sensor value</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected static extern ushort TouchPadReadFiltered(int touchPadIndex);
+        protected static extern ushort NativeTouchPadReadFiltered(int touchPadIndex);
 
         //[MethodImpl(MethodImplOptions.InternalCall)]
         //TODO
@@ -267,7 +267,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="threshold">Threshold of touchpad count, refer to touch_pad_set_trigger_mode to see how to set trigger mode.</param>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected static extern bool TouchPadSetThresh(int touchPadIndex, ushort threshold);
+        protected static extern bool NativeTouchPadSetThresh(int touchPadIndex, ushort threshold);
 
         /// <summary>
         /// Start touch pad filter function This API will start a filter to process the noise in order to prevent false triggering when detecting slight change of capacitance. 
@@ -280,7 +280,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="FilterPeriod">filter calibration period, in ms</param>
         /// <returns>True if successful</returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        protected static extern bool TouchPadFilterStart(uint FilterPeriod);
+        protected static extern bool NativeTouchPadFilterStart(uint FilterPeriod);
 
         /// <summary>
         /// Register touch-pad ISR. The handler will be attached to the same CPU core that this function is running on.
@@ -289,11 +289,10 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// esp_err_t touch_pad_isr_register(intr_handler_tfn, void* arg)
         /// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv422touch_pad_isr_register14intr_handler_tPv
         /// </remarks>
-        /// <param name=""></param>
+        /// <param name="Callback">The callback function to register</param>
         /// <returns>True if successful</returns>
-        //TODO
-        //[MethodImpl(MethodImplOptions.InternalCall)]
-        //protected static extern bool TouchPadIsrRegister(todo);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern bool NativeTouchPadIsrRegister(Action Callback);
 
 
 
@@ -304,17 +303,16 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// touch_pad_isr_deregister(void (*fn)(void *), void *arg)
         /// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv424touch_pad_isr_deregisterPFvPvEPv
         /// </remarks>
-        /// <param name=""></param>
+        /// <param name="Callback">The callback function to unregister</param>
         /// <returns></returns>
-        //TODO
-        //[MethodImpl(MethodImplOptions.InternalCall)]
-        //protected static extern bool TouchPadIsrDeregister(todo);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern bool NativeTouchPadIsrDeregister(Action Callback);
 
         /// <summary>
         /// Dispose
         /// </summary>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern void DisposeNative();
+        private static extern void NativeDispose();
         #endregion
 
     }

@@ -12,15 +12,37 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
     /// </summary>
     public sealed class TouchPad : TouchPadBase
     {
+        private readonly object _eventLock = new object();
+        private TouchPadValueChangedEventHandler _valueChanged;
+        private Action _valueChangedInvoker;
 
         /// <summary>
         /// Event triggered when the touchpad value changes
         /// </summary>
-        [Obsolete("ValueChanged event is not yet implemented", true)]
         public event TouchPadValueChangedEventHandler ValueChanged
         {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
+            add
+            {
+                lock (_eventLock)
+                {
+                    if (_valueChanged == null)
+                    {
+                        NativeTouchPadIsrRegister(_valueChangedInvoker);
+                    }
+                    _valueChanged += value;
+                }
+            }
+            remove
+            {
+                lock (_eventLock)
+                {
+                    _valueChanged -= value;
+                    if (_valueChanged == null)
+                    {
+                        NativeTouchPadIsrDeregister(_valueChangedInvoker);
+                    }
+                }
+            }
         }
 
 
@@ -37,6 +59,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <param name="pinNumber">Valid touch pads pin number</param>
         public TouchPad(int pinNumber) : this(pinNumber, new TouchPadConfig())
         {
+            _valueChangedInvoker = InvokeValueChanged;
         }
 
         /// <summary>
@@ -55,9 +78,14 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         /// <exception cref="Exception">Native call returned not OK return value.</exception>
         public void SetTouchPadTriggerThreshold(float interruptThreshold)
         {
-            ushort touchPadValue = TouchPadReadFiltered(TouchPadIndex);
-            if (!TouchPadSetThresh(TouchPadIndex, (ushort)(touchPadValue * interruptThreshold)))
+            ushort touchPadValue = NativeTouchPadReadFiltered(TouchPadIndex);
+            if (!NativeTouchPadSetThresh(TouchPadIndex, (ushort)(touchPadValue * interruptThreshold)))
                 throw new Exception();
+        }
+
+        private void InvokeValueChanged()
+        {
+            _valueChanged?.Invoke(this, NativeTouchPadRead(this.TouchPadIndex));
         }
 
     }

@@ -40,7 +40,7 @@ namespace nanoFramework.Hardware.Esp32.TouchPad
         {
             if (_config.ReadMode == TouchPadReadMode.Filtered)
             {
-                return TouchPadReadFiltered(TouchPadIndex);
+                return NativeTouchPadReadFiltered(TouchPadIndex);
             }
             else
             {

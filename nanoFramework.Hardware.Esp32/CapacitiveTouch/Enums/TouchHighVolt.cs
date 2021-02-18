@@ -3,7 +3,7 @@
 // See LICENSE file in the project root for full license information.
 //
 
-namespace nanoFramework.Hardware.Esp32.TouchPad
+namespace nanoFramework.Hardware.Esp32
 {
 	/// <summary>
 	/// Touch sensor high reference voltage

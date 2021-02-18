@@ -33,6 +33,9 @@
     <NF_GenerateSkeletonProjectName>nanoFramework_hardware_esp32_native</NF_GenerateSkeletonProjectName>
     <Name>nanoFramework.Hardware.Esp32</Name>
   </PropertyGroup>
+  <PropertyGroup Label="nanoFramework">
+    <NFMDP_GENERATE_STUBS>true</NFMDP_GENERATE_STUBS>
+  </PropertyGroup>
   <ItemGroup>
     <NFMDP_PE_ExcludeClassByName Include="ThisAssembly">
       <InProject>false</InProject>
@@ -53,13 +56,9 @@
     <Compile Include="CapacitiveTouch\Enums\TouchLowVolt.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchPinSelectMode.cs" />
     <Compile Include="CapacitiveTouch\TouchPad.cs" />
-    <Compile Include="CapacitiveTouch\TouchPadBase.cs" />
     <Compile Include="CapacitiveTouch\Config\TouchPadConfig.cs" />
-    <Compile Include="CapacitiveTouch\Config\TouchPadConfigBase.cs" />
-    <Compile Include="CapacitiveTouch\Config\TouchPadReaderConfig.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchPadReadMode.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchVoltAtten.cs" />
-    <Compile Include="CapacitiveTouch\TouchPadReader.cs" />
     <Compile Include="CapacitiveTouch\TouchPadValueChangedEventHandler.cs" />
     <Compile Include="GpioPins.cs" />
     <Compile Include="HighResEventListener.cs" />

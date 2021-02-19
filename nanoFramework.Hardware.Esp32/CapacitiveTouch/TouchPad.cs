@@ -3,44 +3,69 @@
 // See LICENSE file in the project root for full license information.
 //
 
+//#define FILTERED
+
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace nanoFramework.Hardware.Esp32
 {
     /// <summary>
-    /// Base class for toch pad sensors: interrupt or polling driven, using single or multiple gpio pins
+    /// Base class for touch pad sensors: interrupt or polling driven
     /// </summary>
-    public abstract class TouchPad : IDisposable
+    public class TouchPad : IDisposable
     {
         #region Static
         /// <summary>
         /// Initialize the native touchpad featureset
         /// </summary>
         /// <param name="config"></param>
-        public static void Init(TouchPadConfig config)
+        public static void Init(TouchPadSystemConfig config)
         {
             {
                 var result = NativeTouchPadInit();
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
             }
+            Debug.WriteLine("Init: NativeTouchPadInit Complete");
 
             {
-                var result = NativeTouchPadFilterStart(config.TouchPadFilterTouchPeriod);
+                var result = NativeTouchPadSetFsmMode(TouchFsmMode.Timer);
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
             }
+            Debug.WriteLine("Init: NativeTouchPadSetFsmMode Complete");
 
             {
                 var result = NativeTouchPadSetVoltage(config.TouchHighVolt, config.TouchLowVolt, config.TouchVoltAtten);
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
             }
+            Debug.WriteLine("Init: NativeTouchPadSetVoltage Complete");
 
+            //TODO: set tpad trigger mode
+            //TODO: start tpad interrupts via native call
+            //TODO: set touchpad threshhold NativeTouchPadSetThresh
+
+#if FILTERED
             {
-                var result = NativeTouchPadSetFsmMode(TouchFsmMode.Timer);
+                var result = NativeTouchPadFilterStart(config.TouchPadFilterTouchPeriod);
+                if (result != EspNativeError.OK)
+                    throw new Exception(result.ToString());
+            }
+            Debug.WriteLine("Init: NativeTouchPadFilterStart Complete");
+#endif
+        }
+
+        /// <summary>
+        /// Deinitialize the native touchpad featureset
+        /// </summary>
+        public static void Deinit()
+        {
+            {
+                var result = NativeTouchPadDeinit();
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
             }
@@ -51,6 +76,11 @@ namespace nanoFramework.Hardware.Esp32
         /// ESP32 offers up to 10 capacitive IOs that detect changes in capacitance on touch sensors due to finger contact or proximity.
         /// Index is the Touch pin number, value is the raw GPIO pin number
         /// </summary>
+        /// <remarks>
+        /// This works on ESP32, but not ESP32-S2 (different mapping)
+        /// TODO: resolve the pinmap issue
+        /// See this link: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv411touch_pad_t
+        /// </remarks>
         private static readonly byte[] _gpioTouchPadArr = new byte[]
         {
             4,	//T0
@@ -79,6 +109,7 @@ namespace nanoFramework.Hardware.Esp32
         /// <summary>
         /// Event triggered when the touchpad value changes
         /// </summary>
+        [Obsolete("Not implemented", true)]
         public event TouchPadValueChangedEventHandler ValueChanged
         {
             add
@@ -132,11 +163,8 @@ namespace nanoFramework.Hardware.Esp32
         /// <exception cref="ArgumentException">Invalid touchpad pin number</exception>
         /// <exception cref="ArgumentNullException">Configuration parameter is null</exception>
         /// <exception cref="Exception">One of native calls returned not OK return value.</exception>
-        protected TouchPad(int PinNumber, TouchPadConfig config)
+        public TouchPad(int PinNumber, TouchPadConfig config)
         {
-            if (_gpioPinNumber == -1 || _touchPadIndex == -1)
-                throw new ArgumentException(nameof(PinNumber));
-
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
 
@@ -158,12 +186,15 @@ namespace nanoFramework.Hardware.Esp32
             }
             else
             {
-                if (PinNumber > 0 && PinNumber < 9)
+                if (PinNumber > 0 && PinNumber < 10)
                 {
                     _gpioPinNumber = _gpioTouchPadArr[PinNumber];
                     _touchPadIndex = PinNumber;
                 }
             }
+
+            if (_gpioPinNumber == -1 || _touchPadIndex == -1)
+                throw new ArgumentException(nameof(PinNumber));
 
             _valueChangedInvoker = InvokeValueChanged;
             _config = config;
@@ -201,15 +232,28 @@ namespace nanoFramework.Hardware.Esp32
         /// <exception cref="NotImplementedException">Config.ReadMode is set to an unsupported value</exception>
         public ushort Read()
         {
-            if (_config.ReadMode == TouchPadReadMode.Filtered)
-            {
-                return NativeTouchPadReadFiltered(TouchPadIndex);
-            }
-            else
-            {
-                //TODO: implement raw read mode
-                throw new NotImplementedException();
-            }
+            //TODO: add plumbing to allow filtered/unfiltered reads
+            //Must be synchronised with system Init()
+            //-- If filtered read is requested here, then filtering must be enabled in Init
+
+            //if (_config.ReadMode == TouchPadReadMode.Filtered)
+            //{
+            //    return NativeTouchPadReadRawData(TouchPadIndex);
+            //}
+            //else if (_config.ReadMode == TouchPadReadMode.Unfiltered)
+            //{
+            //    return NativeTouchPadRead(TouchPadIndex);
+            //}
+            //else
+            //{
+            //    throw new NotImplementedException();
+            //}
+
+#if FILTERED
+            return NativeTouchPadReadRawData(TouchPadIndex);
+#else
+            return NativeTouchPadRead(TouchPadIndex);
+#endif
         }
 
 
@@ -288,7 +332,7 @@ namespace nanoFramework.Hardware.Esp32
         protected static extern EspNativeError NativeTouchPadSetFsmMode(TouchFsmMode touchFsmMode);
 
         /// <summary>
-        /// Set touch sensor high voltage threshold of chanrge. 
+        /// Set touch sensor high voltage threshold of change. 
         /// The touch sensor measures the channel capacitance value by charging and discharging the channel.
         /// So the high threshold should be less than the supply voltage.
         /// </summary>
@@ -302,6 +346,20 @@ namespace nanoFramework.Hardware.Esp32
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
         protected static extern EspNativeError NativeTouchPadSetVoltage(TouchHighVolt touchHighVolt, TouchLowVolt touchLowVolt, TouchVoltAtten touchVoltAtten);
+
+
+
+        /// <summary>
+        /// Set touch sensor interrupt trigger mode. Interrupt can be triggered either when counter result is less than threshold or when counter result is more than threshold.
+        /// </summary>
+        /// <param name="mode">pointer to accept touch sensor interrupt trigger mode</param>
+        /// <remarks>
+        /// esp_err_t touch_pad_set_trigger_mode(touch_trigger_mode_tmode)
+        /// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv426touch_pad_set_trigger_mode20touch_trigger_mode_t
+        /// </remarks>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern EspNativeError NativeTouchPadSetTriggerMode(TouchTriggerMode mode);
 
         /// <summary>
         /// Configure touch pad interrupt threshold.
@@ -398,6 +456,51 @@ namespace nanoFramework.Hardware.Esp32
         [MethodImpl(MethodImplOptions.InternalCall)]
         protected static extern EspNativeError NativeTouchPadFilterStart(uint FilterPeriod);
 
+
+        /// <summary>
+        /// Stop touch pad filter function Need to call touch_pad_filter_start before all touch filter APIs
+        /// </summary>
+        /// <remarks>
+        /// esp_err_t touch_pad_filter_stop(void)
+        /// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv421touch_pad_filter_stopv
+        /// </remarks>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern EspNativeError NativeTouchPadFilterStop();
+
+        /// <summary>
+        /// To enable touch pad interrupt.
+        /// </summary>
+        /// <remarks>
+        /// esp_err_t touch_pad_intr_enable(void)
+        /// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv421touch_pad_intr_enablev
+        /// </remarks>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern EspNativeError NativeTouchPadEnableInterrupts();
+
+        /// <summary>
+        /// To disable touch pad interrupt.
+        /// </summary>
+        /// <remarks>
+        /// esp_err_t touch_pad_intr_disable(void)
+        /// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv422touch_pad_intr_disablev
+        /// </remarks>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern EspNativeError NativeTouchPadDisableInterrupts();
+
+        /// <summary>
+        /// To clear touch pad interrupt.
+        /// </summary>
+        /// <remarks>
+        /// esp_err_t touch_pad_intr_clear
+        /// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv420touch_pad_intr_clearv
+        /// </remarks>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern EspNativeError NativeTouchPadClearInterrupts();
+
         /// <summary>
         /// Register touch-pad ISR. The handler will be attached to the same CPU core that this function is running on.
         /// </summary>
@@ -410,8 +513,6 @@ namespace nanoFramework.Hardware.Esp32
         [MethodImpl(MethodImplOptions.InternalCall)]
         protected static extern EspNativeError NativeTouchPadIsrRegister(Action Callback);
 
-
-
         /// <summary>
         /// Deregister the handler previously registered using touch_pad_isr_handler_register.
         /// </summary>
@@ -423,6 +524,31 @@ namespace nanoFramework.Hardware.Esp32
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
         protected static extern EspNativeError NativeTouchPadIsrDeregister(Action Callback);
+
+        /// <summary>
+        /// Get the touch sensor channel active status mask.
+        /// The bit position represents the channel number. 
+        /// The 0/1 status of the bit represents the trigger status.
+        /// </summary>
+        /// <remarks>
+        /// uint32_t touch_pad_get_status(void)
+        /// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv420touch_pad_get_statusv
+        /// </remarks>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern uint NativeTouchpadGetStatus();
+
+        /// <summary>
+        /// To clear the touch sensor channel active status.
+        /// </summary>
+        /// <remarks>
+        /// esp_err_t touch_pad_clear_status(void)
+        /// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/touch_pad.html#_CPPv422touch_pad_clear_statusv
+        /// </remarks>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        protected static extern EspNativeError NativeTouchpadClearStatus();
+
 
         /// <summary>
         /// Dispose

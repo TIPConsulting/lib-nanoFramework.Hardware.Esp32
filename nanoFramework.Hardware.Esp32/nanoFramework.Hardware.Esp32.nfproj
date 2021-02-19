@@ -51,10 +51,12 @@
   </ItemGroup>
   <Import Project="$(NanoFrameworkProjectSystemPath)NFProjectSystem.props" Condition="Exists('$(NanoFrameworkProjectSystemPath)NFProjectSystem.props')" />
   <ItemGroup>
+    <Compile Include="CapacitiveTouch\Config\TouchPadSystemConfig.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchFsmMode.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchHighVolt.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchLowVolt.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchPinSelectMode.cs" />
+    <Compile Include="CapacitiveTouch\Enums\TouchTriggerMode.cs" />
     <Compile Include="CapacitiveTouch\TouchPad.cs" />
     <Compile Include="CapacitiveTouch\Config\TouchPadConfig.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchPadReadMode.cs" />

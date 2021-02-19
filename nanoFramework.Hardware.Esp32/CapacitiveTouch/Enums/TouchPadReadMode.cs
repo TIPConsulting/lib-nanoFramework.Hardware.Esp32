@@ -11,14 +11,13 @@ namespace nanoFramework.Hardware.Esp32
     public enum TouchPadReadMode
     {
         /// <summary>
-        /// Read filtered sensor values.  Used to select touch_pad_read_filtered
+        /// Read filtered sensor values.  Used to select touch_pad_read_raw_data
         /// </summary>
         Filtered = 0,
 
         /// <summary>
         /// Read raw sensor values.  Used to select touch_pad_read
         /// </summary>
-        //TODO: implement TouchPadSetReadRawData in TouchPadBase
-        //Raw
+        Unfiltered
     }
 }

@@ -175,7 +175,10 @@ namespace nanoFramework.Hardware.Esp32
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
             }
-            SetTouchPadTriggerThreshold(_config.InterruptThresholdValue);
+            if (_controller.Config.TouchReadMode == TouchPadReadMode.Filtered)
+            {
+                SetTouchPadTriggerThreshold(_config.InterruptThresholdValue);
+            }
         }
 
 

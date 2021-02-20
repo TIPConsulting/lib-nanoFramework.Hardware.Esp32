@@ -11,9 +11,9 @@ namespace nanoFramework.Hardware.Esp32
     public class TouchPadConfig
     {
         
-        private ushort touchThreshNoUse = 0;
-        private TouchPinSelectMode pinSelectMode = TouchPinSelectMode.GpioIndex;
-        private float interruptThresholdValue = 2f / 3f;
+        private ushort _touchThreshNoUse = 0;
+        private TouchPinSelectMode _pinSelectMode = TouchPinSelectMode.GpioIndex;
+        private float _interruptThresholdValue = 2f / 3f;
 
 
         /// <summary>
@@ -22,8 +22,8 @@ namespace nanoFramework.Hardware.Esp32
         /// </summary>
         public ushort TouchThreshNoUse
         {
-            get => touchThreshNoUse;
-            set => touchThreshNoUse = value;
+            get => _touchThreshNoUse;
+            set => _touchThreshNoUse = value;
         }
 
         /// <summary>
@@ -32,11 +32,9 @@ namespace nanoFramework.Hardware.Esp32
         /// </summary>
         public TouchPinSelectMode PinSelectMode
         {
-            get => pinSelectMode;
-            set => pinSelectMode = value;
+            get => _pinSelectMode;
+            set => _pinSelectMode = value;
         }
-
-        //TODO: re-add ReadMode (filter/not filtered)
 
         /// <summary>
         /// The threshold to trigger interrupt when the pad is touched.
@@ -47,8 +45,8 @@ namespace nanoFramework.Hardware.Esp32
         /// </remarks>
         public float InterruptThresholdValue
         {
-            get => interruptThresholdValue;
-            set => interruptThresholdValue = value;
+            get => _interruptThresholdValue;
+            set => _interruptThresholdValue = value;
         }
     }
 }

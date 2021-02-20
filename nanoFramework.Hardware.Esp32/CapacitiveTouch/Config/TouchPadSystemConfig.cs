@@ -10,11 +10,12 @@ namespace nanoFramework.Hardware.Esp32
     /// </summary>
     public class TouchPadSystemConfig
     {
-        private TouchHighVolt touchHighVolt = TouchHighVolt.H2V7;
-        private TouchLowVolt touchLowVolt = TouchLowVolt.L0V5;
-        private TouchVoltAtten touchVoltAtten = TouchVoltAtten.A1V;
-        private uint touchPadFilterTouchPeriod = 10;
-
+        private TouchHighVolt _touchHighVolt = TouchHighVolt.H2V7;
+        private TouchLowVolt _touchLowVolt = TouchLowVolt.L0V5;
+        private TouchVoltAtten _touchVoltAtten = TouchVoltAtten.A1V;
+        private TouchTriggerMode _touchTriggerMode = TouchTriggerMode.TOUCH_TRIGGER_BELOW;
+        private uint _touchPadFilterTouchPeriod = 10;
+        private TouchPadReadMode _touchPadReadMode = TouchPadReadMode.Unfiltered;
 
         /// <summary>
         /// Charging voltage threshold of the internal circuit of the touch sensor.
@@ -22,8 +23,8 @@ namespace nanoFramework.Hardware.Esp32
         /// </summary>
         public TouchHighVolt TouchHighVolt
         {
-            get => touchHighVolt;
-            set => touchHighVolt = value;
+            get => _touchHighVolt;
+            set => _touchHighVolt = value;
         }
 
         /// <summary>
@@ -32,8 +33,8 @@ namespace nanoFramework.Hardware.Esp32
         /// </summary>
         public TouchLowVolt TouchLowVolt
         {
-            get => touchLowVolt;
-            set => touchLowVolt = value;
+            get => _touchLowVolt;
+            set => _touchLowVolt = value;
         }
 
         /// <summary>
@@ -42,8 +43,18 @@ namespace nanoFramework.Hardware.Esp32
         /// </summary>
         public TouchVoltAtten TouchVoltAtten
         {
-            get => touchVoltAtten;
-            set => touchVoltAtten = value;
+            get => _touchVoltAtten;
+            set => _touchVoltAtten = value;
+        }
+
+        /// <summary>
+        /// Touchpad interrupt trigger mode
+        /// Default = <see cref="TouchTriggerMode.TOUCH_TRIGGER_BELOW"/>
+        /// </summary>
+        public TouchTriggerMode TouchTriggerMode
+        {
+            get => _touchTriggerMode;
+            set => _touchTriggerMode = value;
         }
 
         /// <summary>
@@ -52,9 +63,18 @@ namespace nanoFramework.Hardware.Esp32
         /// </summary>
         public uint TouchPadFilterTouchPeriod
         {
-            get => touchPadFilterTouchPeriod;
-            set => touchPadFilterTouchPeriod = value;
+            get => _touchPadFilterTouchPeriod;
+            set => _touchPadFilterTouchPeriod = value;
         }
 
+        /// <summary>
+        /// Determine if the pin value reader should use a filtered or unfiltered datastream.
+        /// Default: unfiltered
+        /// </summary>
+        public TouchPadReadMode TouchReadMode
+        {
+            get => _touchPadReadMode;
+            set => _touchPadReadMode = value;
+        }
     }
 }

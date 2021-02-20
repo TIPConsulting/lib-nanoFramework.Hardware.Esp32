@@ -61,6 +61,7 @@
     <Compile Include="CapacitiveTouch\Config\TouchPadConfig.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchPadReadMode.cs" />
     <Compile Include="CapacitiveTouch\Enums\TouchVoltAtten.cs" />
+    <Compile Include="CapacitiveTouch\TouchPadController.cs" />
     <Compile Include="CapacitiveTouch\TouchPadValueChangedEventHandler.cs" />
     <Compile Include="GpioPins.cs" />
     <Compile Include="HighResEventListener.cs" />

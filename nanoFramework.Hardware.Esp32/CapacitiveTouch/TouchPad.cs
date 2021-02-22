@@ -142,7 +142,7 @@ namespace nanoFramework.Hardware.Esp32
                 _gpioPinNumber = PinNumber;
                 _touchPadIndex = touchIdx;
             }
-            else
+            else if (config.PinSelectMode == TouchPinSelectMode.TouchIndex)
             {
                 if (PinNumber >= 0 && PinNumber <= 9)
                 {
@@ -175,10 +175,8 @@ namespace nanoFramework.Hardware.Esp32
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
             }
-            if (_controller.Config.TouchReadMode == TouchPadReadMode.Filtered)
-            {
-                SetTouchPadTriggerThreshold(_config.InterruptThresholdValue);
-            }
+
+            SetTouchPadTriggerThreshold(_config.InterruptThresholdValue);
         }
 
 
@@ -188,29 +186,72 @@ namespace nanoFramework.Hardware.Esp32
         /// <exception cref="Exception">Native call returned not OK return value.</exception>
         public void SetTouchPadTriggerThreshold(float interruptThreshold)
         {
-            ushort touchPadValue = NativeTouchPadReadFiltered(TouchPadIndex);
+            ushort touchPadValue = NativeTouchPadReadFiltered(_touchPadIndex);
             {
-                var result = NativeTouchPadSetThresh(TouchPadIndex, (ushort)(touchPadValue * interruptThreshold));
+                var result = NativeTouchPadSetThresh(_touchPadIndex, (ushort)(touchPadValue * interruptThreshold));
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
             }
         }
 
         /// <summary>
-        /// Read current sensor value using the preferred read mode set in the configuration (filtered vs unfiltered)
+        /// Check if the ESP driver detects a touchpad touch
         /// </summary>
         /// <returns></returns>
+        [Obsolete("Does not work", true)]
+        public bool IsTouched()
+        {
+            //TODO: why doesnt this work?
+            var status = TouchPadController.NativeTouchpadGetStatus();
+            return (status & (1 << _touchPadIndex)) != 0;
+        }
+
+        /// <summary>
+        /// Read current sensor value using the preferred read mode set in the configuration.
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>
+        /// if unfiltered => NativeTouchPadRead,
+        /// if filtered => NativeTouchPadReadFiltered
+        /// </remarks>
         /// <exception cref="NotImplementedException">Config.ReadMode is set to an unsupported value</exception>
         public ushort Read()
         {
             if (_controller.Config.TouchReadMode == TouchPadReadMode.Unfiltered)
             {
-                return NativeTouchPadRead(TouchPadIndex);
+                return NativeTouchPadRead(_touchPadIndex);
             }
             else if (_controller.Config.TouchReadMode == TouchPadReadMode.Filtered)
             {
                 //TODO: figure out the issues with NativeTouchPadReadRawData and NativeTouchPadReadFiltered
-                return NativeTouchPadReadRawData(TouchPadIndex);
+                return NativeTouchPadReadFiltered(_touchPadIndex);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Read current raw sensor data using the preferred API.
+        /// If filtering is disabled, this function is identical to <see cref="Read"/>
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>
+        /// if unfiltered => NativeTouchPadRead,
+        /// if filtered => NativeTouchPadReadRawData
+        /// </remarks>
+        /// <exception cref="NotImplementedException">Config.ReadMode is set to an unsupported value</exception>
+        public ushort ReadRaw()
+        {
+            if (_controller.Config.TouchReadMode == TouchPadReadMode.Unfiltered)
+            {
+                return NativeTouchPadRead(_touchPadIndex);
+            }
+            else if (_controller.Config.TouchReadMode == TouchPadReadMode.Filtered)
+            {
+                //TODO: figure out the issues with NativeTouchPadReadRawData and NativeTouchPadReadFiltered
+                return NativeTouchPadReadRawData(_touchPadIndex);
             }
             else
             {

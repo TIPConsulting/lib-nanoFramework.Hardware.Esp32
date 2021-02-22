@@ -50,6 +50,8 @@ namespace nanoFramework.Hardware.Esp32
             }
 
             {
+                //we need timer mode for interrupts to work
+                //if software mode is needed, then we also need to implement and call touch_pad_sw_start()
                 var result = NativeTouchPadSetFsmMode(TouchFsmMode.Timer);
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
@@ -467,7 +469,7 @@ namespace nanoFramework.Hardware.Esp32
         /// </remarks>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        static extern uint NativeTouchpadGetStatus();
+        internal static extern uint NativeTouchpadGetStatus();
 
         /// <summary>
         /// To clear the touch sensor channel active status.
@@ -478,7 +480,7 @@ namespace nanoFramework.Hardware.Esp32
         /// </remarks>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.InternalCall)]
-        static extern EspNativeError NativeTouchpadClearStatus();
+        internal static extern EspNativeError NativeTouchpadClearStatus();
 
         /// <summary>
         /// Dispose

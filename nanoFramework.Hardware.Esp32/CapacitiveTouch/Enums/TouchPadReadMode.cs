@@ -3,6 +3,8 @@
 // See LICENSE file in the project root for full license information.
 //
 
+using System;
+
 namespace nanoFramework.Hardware.Esp32
 {
     /// <summary>
@@ -15,9 +17,11 @@ namespace nanoFramework.Hardware.Esp32
         /// </summary>
         Unfiltered = 0,
 
+
         /// <summary>
         /// Read filtered sensor values.  Used to select touch_pad_read_raw_data
         /// </summary>
+        [Obsolete("Does not work properly yet", false)]
         Filtered
     }
 }

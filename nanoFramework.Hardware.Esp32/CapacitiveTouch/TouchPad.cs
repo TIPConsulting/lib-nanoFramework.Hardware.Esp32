@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace nanoFramework.Hardware.Esp32
 {
@@ -47,6 +48,7 @@ namespace nanoFramework.Hardware.Esp32
         private readonly int _touchPadIndex = -1;
         private readonly TouchPadController _controller;
         private readonly TouchPadConfig _config;
+        private ushort _touchpadTouchThreshhold;
         private TouchPadValueChangedEventHandler _valueChanged;
         private bool _isDisposed;
 
@@ -175,7 +177,8 @@ namespace nanoFramework.Hardware.Esp32
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
             }
-
+            //wait for "normal" values on sensor
+            Thread.Sleep(5);
             SetTouchPadTriggerThreshold(_config.InterruptThresholdValue);
         }
 
@@ -186,24 +189,36 @@ namespace nanoFramework.Hardware.Esp32
         /// <exception cref="Exception">Native call returned not OK return value.</exception>
         public void SetTouchPadTriggerThreshold(float interruptThreshold)
         {
-            ushort touchPadValue = NativeTouchPadReadFiltered(_touchPadIndex);
+            ushort touchPadValue = Read();
             {
-                var result = NativeTouchPadSetThresh(_touchPadIndex, (ushort)(touchPadValue * interruptThreshold));
+                _touchpadTouchThreshhold = (ushort)(touchPadValue * interruptThreshold);
+                var result = NativeTouchPadSetThresh(_touchPadIndex, _touchpadTouchThreshhold);
                 if (result != EspNativeError.OK)
                     throw new Exception(result.ToString());
             }
         }
 
         /// <summary>
-        /// Check if the ESP driver detects a touchpad touch
+        /// Check if the touchpad value indicates a touch.
+        /// Uses Read() with respect for the touch threshhold and <see cref="TouchPadSystemConfig.TouchTriggerMode"/>
         /// </summary>
         /// <returns></returns>
-        [Obsolete("Does not work", true)]
+        /// <exception cref="NotImplementedException">Invalid TouchTriggerMode set in config</exception>
         public bool IsTouched()
         {
-            //TODO: why doesnt this work?
-            var status = TouchPadController.NativeTouchpadGetStatus();
-            return (status & (1 << _touchPadIndex)) != 0;
+            var val = Read();
+            if (_controller.Config.TouchTriggerMode == TouchTriggerMode.TOUCH_TRIGGER_BELOW)
+            {
+                return val < _touchpadTouchThreshhold;
+            }
+            else if (_controller.Config.TouchTriggerMode == TouchTriggerMode.TOUCH_TRIGGER_ABOVE)
+            {
+                return val > _touchpadTouchThreshhold;
+            }
+            else
+            {
+                throw new NotImplementedException("Invalid TouchTriggerMode configuration");
+            }
         }
 
         /// <summary>

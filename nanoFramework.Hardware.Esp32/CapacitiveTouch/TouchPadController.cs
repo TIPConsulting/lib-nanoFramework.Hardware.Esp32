@@ -83,7 +83,7 @@ namespace nanoFramework.Hardware.Esp32
         /// </summary>
         /// <param name="touchPadIndex"></param>
         /// <param name="handler"></param>
-        public void RegisterTouchpadHandler(int touchPadIndex, Action handler)
+        internal void RegisterTouchpadHandler(int touchPadIndex, Action handler)
         {
             if (touchPadIndex < 0 || touchPadIndex > 9)
             {
@@ -125,7 +125,7 @@ namespace nanoFramework.Hardware.Esp32
         /// </summary>
         /// <param name="touchPadIndex"></param>
         /// <param name="handler"></param>
-        public void DeregisterTouchpadHandler(int touchPadIndex, Action handler)
+        internal void DeregisterTouchpadHandler(int touchPadIndex, Action handler)
         {
             if (touchPadIndex < 0 || touchPadIndex > 9)
             {
@@ -180,6 +180,8 @@ namespace nanoFramework.Hardware.Esp32
             var touchStatus = NativeTouchpadGetStatus();
             for (int i = 0; i < 10; ++i)
             {
+                //TODO: I think this is backwards.
+                //Need to review results in native cpp
                 if ((touchStatus & (1 << i)) == 0)
                 {
                     continue;
